@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     settings::process( argc, argv ); 
-    Time time( 0.000005, 2, 2000 ); //args: dt, endT, write interval / steps
+    Time time( 0.000001, 2, 5000 ); //args: dt, endT, write interval / steps
 
     const scalar pi = 3.1415926536;
     parallelCom::decompose( settings::zoneName()+"/"+"mesh" ); 
@@ -31,13 +31,13 @@ int main(int argc, char* argv[])
 
     mesh.write(settings::zoneName()+"/data");
     
-    Field<vector> U( mesh, vector(1,0,0), "UBC" );
-    Field<vector> B( mesh, vector(0,0,0), "BBC" );
-    Field<vector> Bstar( mesh, vector(0,0,0), "BBC" );
-    Field<scalar> rho( mesh, 1, "rhoBC" );
-    Field<scalar> p( mesh, 0, "pBC" );
-    Field<vector> omegav( mesh, vector(0,0,0), "UBC" ); 
-    Field<vector> J( mesh, vector(0,0,0), "BBC" );
+    Field<vector> U( mesh, vector(1,0,0), "U" );
+    Field<vector> B( mesh, vector(0,0,0), "B" );
+    Field<vector> Bstar( mesh, vector(0,0,0), "B" );
+    Field<scalar> rho( mesh, 1, "rho" );
+    Field<scalar> p( mesh, 0, "p" );
+    Field<vector> omegav( mesh, vector(0,0,0), "U" ); 
+    Field<vector> J( mesh, vector(0,0,0), "B" );
     scalar mu = 0.1256;
     //Magnetic diffusivity
     scalar DB = 0.1256;
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     scalar DBU = 1.0/(2*(1));
 
     //Initalise pB poisson equation
-    std::shared_ptr<Field<scalar> > pB_ptr( std::make_shared<Field<scalar> >( mesh, 0, "pBBC" ) );
+    std::shared_ptr<Field<scalar> > pB_ptr( std::make_shared<Field<scalar> >( mesh, 0, "pB" ) );
     auto& pB = (*pB_ptr);
   
     poisson pBEqn(pB_ptr);
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
                 B(i, j, k) = 0.8*vector( ((-2)*std::sin(y*2))+std::sin(z),((2*std::sin(x))+std::sin(z)),( std::sin(x)+std::sin(y) ));
 		p(i, j, k) = 0;
 		pB(i, j, k) = 0;
-                rho(i, j, k) = 1;
+                rho(i, j, k) = 1.0;
             }
         }   
     }
@@ -101,8 +101,8 @@ int main(int argc, char* argv[])
 	B.write(settings::zoneName()+"/data", "B");
         pB.write(settings::zoneName()+"/data", "pB");
 	
-        //if( time.writelog() )
-        //{
+        if( time.writelog() )
+        {
             if( parallelCom::master() )
             { 
                 std::cout << "Step: " << time.timeStep() << ".              Time: " << time.curTime() << std::endl;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
             }
 
             tools::CFL( U, mesh );
-        //}
+        }
 	
 	//kinetic and magnetic energy
         scalar Ek=0.0;
@@ -142,6 +142,7 @@ int main(int argc, char* argv[])
         reduce( Em, plusOp<scalar>() );
 	reduce( Jav, plusOp<scalar>() );
 	reduce( omega, plusOp<scalar>() );
+	reduce( Jmax, maxOp<scalar>() );
 	reduce( n, plusOp<int>() );
 
         Ek /= n;

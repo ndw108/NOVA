@@ -6,10 +6,6 @@ add_executable (TG_Poisson ./TG_Piosson/TG.cpp)
 target_link_libraries (TG_Poisson  NOVA ${Boost_LIBRARIES} ${MPI_LIBRARIES} ${LIBS}) 
 install(TARGETS TG_Poisson DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
-add_executable (TG_MHD ./TG_MHD/TG_MHD.cpp)
-target_link_libraries (TG_MHD  NOVA ${Boost_LIBRARIES} ${MPI_LIBRARIES} ${LIBS})
-install(TARGETS TG_MHD DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
 add_executable (OT ./OT/OT.cpp)
 target_link_libraries (OT  NOVA ${Boost_LIBRARIES} ${MPI_LIBRARIES} ${LIBS})
 install(TARGETS OT DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
